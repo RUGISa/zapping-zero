@@ -44,6 +44,7 @@ const KO_TEXT = {
   // 게임
   currentWord: "현재 단어",
   myTime: "내 남은 시간",
+  oppTime: "상대 남은 시간",
   turn: "턴",
   myTurn: "내 턴",
   oppTurn: "상대 턴",
@@ -57,6 +58,10 @@ const KO_TEXT = {
   gameOver: "게임 종료",
   winner: "승자",
   leaveRoom: "방 나가기",
+
+  // 규칙 보기
+  showRules: "규칙 보기",
+  close: "닫기",
 };
 
 const JA_TEXT = {
@@ -100,6 +105,7 @@ const JA_TEXT = {
   // 게임
   currentWord: "現在の単語",
   myTime: "自分の残り時間",
+  oppTime: "相手の残り時間",
   turn: "ターン",
   myTurn: "自分のターン",
   oppTurn: "相手のターン",
@@ -113,6 +119,10 @@ const JA_TEXT = {
   gameOver: "ゲーム終了",
   winner: "勝者",
   leaveRoom: "部屋から退出",
+
+  // 규칙 보기
+  showRules: "ルールを見る",
+  close: "閉じる",
 };
 
 // ===== 힌트 계산 유틸 =====
@@ -126,14 +136,8 @@ const getKoreanNextChar = (word) => {
 };
 
 // 일본어: 복합음/장음/촉음 규칙 + 가나만 추출
-//  - 원본문자에서 가나(ひらがな/カタカナ/ー)만 추출
-//  - 작은ゃ/ゅ/ょ/… 로 끝나면: 앞글자 / 작은글자  → しゅ → し / ゅ
-//  - 장음(ー)으로 끝나면: 앞글자의 모음에 따라 あ/い/う/え/お → レー → レ / え
-//  - 촉음(っ/ッ)으로 끝나면: 그 전 글자만 → きっと → と
-//  - 그 외: 마지막 글자 하나만 → オレンジ → ジ
 const isKana = (ch) => !!ch && /[ぁ-ゟ゠-ヿー]/.test(ch);
 
-// 모음 판별용 그룹
 const VOWEL_A =
   "あかさたなはまやらわがざだばぱぁゃァャアカサタナハマヤラワガザダバパ";
 const VOWEL_I =
@@ -145,7 +149,6 @@ const VOWEL_E =
 const VOWEL_O =
   "おこそとのほもよろをごぞどぼぽぉょオコソトノホモヨロヲゴゾドボポォョ";
 
-// base 가 어떤 모음인지 보고, 그 모음에 해당하는 히라가나(あ/い/う/え/お) 리턴
 const getVowelHiragana = (ch) => {
   if (!ch) return null;
   if (VOWEL_A.includes(ch)) return "あ";
@@ -156,17 +159,13 @@ const getVowelHiragana = (ch) => {
   return null;
 };
 
-// 복합음용 작은 글자들
 const SMALL_KANA = "ゃゅょャュョァィゥェォヮ";
-// 장음, 촉음
 const LONG_MARK = "ー";
 const SOKUON = "っッ";
 
 const getJapaneseNextChars = (word) => {
   if (!word) return { first: null, second: null };
 
-  // 가나만 추출 (한자, 괄호, 알파벳 등 제거)
-  // 예: "無知(むち)" -> "むち", "ボカロ(ぼかろ)" -> "ぼかろ"
   const kanaOnly = word.replace(/[^ぁ-ゟ゠-ヿー]/g, "");
   const trimmed = kanaOnly.trim();
   const len = trimmed.length;
@@ -176,7 +175,6 @@ const getJapaneseNextChars = (word) => {
   let second = null;
   const last = trimmed[len - 1];
 
-  // 1) 마지막이 작은ゃ/ゅ/ょ/… 인 경우 → 앞글자 / 작은글자
   if (SMALL_KANA.includes(last)) {
     const base = len >= 2 ? trimmed[len - 2] : null;
     if (isKana(base)) first = base;
@@ -184,26 +182,22 @@ const getJapaneseNextChars = (word) => {
     return { first, second };
   }
 
-  // 2) 마지막이 장음(ー)인 경우 → 앞글자의 모음에 따라 あ/い/う/え/お
   if (LONG_MARK.includes(last)) {
     const base = len >= 2 ? trimmed[len - 2] : null;
     if (isKana(base)) {
       first = base;
-      const vowel = getVowelHiragana(base);
-      second = vowel; // 모음이 없으면 null
+      second = getVowelHiragana(base);
       return { first, second };
     }
     return { first: null, second: null };
   }
 
-  // 3) 마지막이 촉음(っ/ッ)인 경우 → 그 전 글자만 사용
   if (SOKUON.includes(last)) {
     const base = len >= 2 ? trimmed[len - 2] : null;
     if (isKana(base)) return { first: base, second: null };
     return { first: null, second: null };
   }
 
-  // 4) 그 외: 마지막 글자 하나만 사용
   if (isKana(last)) {
     return { first: null, second: last };
   }
@@ -221,6 +215,9 @@ export default function RoomFlow() {
   const [playerType, setPlayerType] = useState(null);
   const [userId, setUserId] = useState(null);
 
+  // 규칙 팝업
+  const [showRules, setShowRules] = useState(false);
+
   // 방 목록 / 선택
   const [rooms, setRooms] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
@@ -232,8 +229,8 @@ export default function RoomFlow() {
   const [joinPasswordInput, setJoinPasswordInput] = useState("");
 
   // 현재 들어간 방
-  const [currentRoom, setCurrentRoom] = useState(null); // { roomId, roomName, creatorType, hasPassword }
-  const [roomInfo, setRoomInfo] = useState(null); // /rooms/:id 폴링 결과
+  const [currentRoom, setCurrentRoom] = useState(null);
+  const [roomInfo, setRoomInfo] = useState(null);
   const [isHost, setIsHost] = useState(false);
 
   // 방 안 상태: waiting / playing / finished
@@ -241,7 +238,7 @@ export default function RoomFlow() {
 
   // 게임 상태
   const [gameId, setGameId] = useState(null);
-  const [gameState, setGameState] = useState(null); // /games/:id/status
+  const [gameState, setGameState] = useState(null);
   const [inputWord, setInputWord] = useState("");
 
   // ===== 공통 유틸 =====
@@ -267,7 +264,6 @@ export default function RoomFlow() {
     resetGameStateAll();
   };
 
-  // 현재 UI 텍스트 세트
   const T = language === "ko" ? KO_TEXT : JA_TEXT;
 
   // ===== 1. 국적 선택 & 로그인 =====
@@ -297,7 +293,6 @@ export default function RoomFlow() {
     }
   };
 
-  // 국적/로그인 상태를 전부 초기화하고 처음으로 돌아가기
   const handleChangeLanguageAll = () => {
     setStep(1);
     setPlayerType(null);
@@ -312,7 +307,6 @@ export default function RoomFlow() {
     setLanguage("ko");
   };
 
-  // 페이지 오른쪽 위 UI 언어 토글 (한국어 <-> 일본어)
   const handleToggleUiLanguage = () => {
     setLanguage((prev) => (prev === "ko" ? "ja" : "ko"));
   };
@@ -480,8 +474,6 @@ export default function RoomFlow() {
   };
 
   const handleLeaveRoom = () => {
-    // 서버랑 방 삭제 연동은 나중에 맞추고,
-    // 일단 프론트 상태만 초기화
     resetRoomAndGame();
     setStep(2);
   };
@@ -622,6 +614,53 @@ export default function RoomFlow() {
     };
   }, [gameId, roomStage]);
 
+  // ===== 파생 값 (표시용) =====
+  const myTime =
+    gameState && playerType && gameState.timers
+      ? Math.max(0, Math.floor(gameState.timers[playerType] ?? 0))
+      : null;
+
+  const oppType =
+    playerType === "korean"
+      ? "japanese"
+      : playerType === "japanese"
+      ? "korean"
+      : null;
+
+  const oppTime =
+    gameState && oppType && gameState.timers
+      ? Math.max(0, Math.floor(gameState.timers[oppType] ?? 0))
+      : null;
+
+  const isMyTurn = gameState?.currentTurn === playerType;
+
+  const winnerType = gameState?.winner;
+  const winnerLabel =
+    winnerType == null
+      ? ""
+      : winnerType === playerType
+      ? "나"
+      : winnerType === "korean"
+      ? language === "ja"
+        ? "韓国人"
+        : "한국인"
+      : language === "ja"
+      ? "日本人"
+      : "일본인";
+
+  const timerUnit = language === "ja" ? "秒" : "초";
+
+  const nextKoChar = getKoreanNextChar(gameState?.currentWord?.ko);
+  const { first: nextJaFirst, second: nextJaSecond } = getJapaneseNextChars(
+    gameState?.currentWord?.ja || ""
+  );
+
+  const showKoHint = gameState?.currentTurn === "korean";
+  const showJaHint = gameState?.currentTurn === "japanese";
+
+  const hintColumnCount =
+    showKoHint && showJaHint ? 2 : showKoHint || showJaHint ? 1 : 0;
+
   // ===== 단어 제출 =====
   const handleSubmitWord = async (e) => {
     e.preventDefault();
@@ -663,42 +702,13 @@ export default function RoomFlow() {
     }
   };
 
-  // ===== 파생 값 (표시용) =====
-  const myTime =
-    gameState && playerType && gameState.timers
-      ? Math.max(0, Math.floor(gameState.timers[playerType] ?? 0))
-      : null;
-
-  const isMyTurn = gameState?.currentTurn === playerType;
-
-  const winnerType = gameState?.winner;
-  const winnerLabel =
-    winnerType == null
-      ? ""
-      : winnerType === playerType
-      ? "나"
-      : winnerType === "korean"
-      ? (language === "ja" ? "韓国人" : "한국인")
-      : (language === "ja" ? "日本人" : "일본인");
-
-  const timerUnit = language === "ja" ? "秒" : "초";
-
-  const nextKoChar = getKoreanNextChar(gameState?.currentWord?.ko);
-  const { first: nextJaFirst, second: nextJaSecond } = getJapaneseNextChars(
-    gameState?.currentWord?.ja || ""
-  );
-
-  // 현재 턴 기준으로 어떤 힌트를 보여줄지
-  const showKoHint = gameState?.currentTurn === "korean";
-  const showJaHint = gameState?.currentTurn === "japanese";
-
   // ===== 스타일 =====
   const pageStyle = {
     maxWidth: "900px",
     margin: "20px auto",
     padding: "0 12px",
     fontFamily:
-      "system-ui, -apple-system, BlinkMacSystem, 'Segoe UI', sans-serif",
+      "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     color: "#111827",
   };
 
@@ -734,13 +744,236 @@ export default function RoomFlow() {
     boxSizing: "border-box",
   };
 
+  const closeIconStyle = {
+    border: "none",
+    background: "transparent",
+    cursor: "pointer",
+    fontSize: "14px",
+    padding: "0 4px",
+    color: "#6b7280",
+  };
+
+  // ===== 규칙 팝업 내용 (한/일 버전) =====
+  const renderRulesContent = () => {
+    if (language === "ja") {
+      // 일본어 설명
+      return (
+        <div>
+          <h3 style={{ marginTop: 0, marginBottom: "8px" }}>
+            ゲームルール
+          </h3>
+          <p style={{ fontSize: "13px", marginBottom: "6px" }}>
+            1. 基本説明
+          </p>
+          <p style={{ fontSize: "12px", margin: 0 }}>
+            1-1. このゲームは韓国人と日本人が対戦する1対1のしりとりゲームです。
+            <br />
+            1-2. 韓国人は韓国語の単語、日本人は日本語の単語を使います。
+            <br />
+            1-3. ゲーム開始時に、韓国語と日本語でランダムな開始単語が表示されます。
+            <br />
+            1-4. 各プレイヤーは個人タイマー90秒を持ってゲームを行います。
+          </p>
+
+          <p
+            style={{
+              fontSize: "13px",
+              marginBottom: "6px",
+              marginTop: "10px",
+            }}
+          >
+            2. 単語をつなぐルール
+          </p>
+          <p style={{ fontSize: "12px", margin: 0 }}>
+            2-1. 韓国人：前の単語の「韓国語の最後の文字」から始まる単語を出します。
+            <br />
+            2-2. 日本人：前の単語の「日本語の最後の音」につながる単語を出します。
+            <br />
+            2-3. 拗音（しゃ・しゅ・しょ など）、促音（っ）、長音（ー）は発音ルールに従って処理されます。
+            <br />
+            2-4. 画面の「次の頭文字」に、現在のターンでつなぐべき文字が表示されます。
+          </p>
+
+          <p
+            style={{
+              fontSize: "13px",
+              marginBottom: "6px",
+              marginTop: "10px",
+            }}
+          >
+            3. 勝利条件
+          </p>
+          <p style={{ fontSize: "12px", margin: 0 }}>
+            3-1. 相手の残り時間が0秒になった場合、勝利となります。
+            <br />
+            3-2. 相手がルールに合わない単語を出した場合も勝利になります。
+          </p>
+
+          <p
+            style={{
+              fontSize: "13px",
+              marginBottom: "6px",
+              marginTop: "10px",
+            }}
+          >
+            4. 敗北条件
+          </p>
+          <p style={{ fontSize: "12px", margin: 0 }}>
+            4-1. 韓国人が出した単語の「日本語訳」が「ん」で終わる場合、
+            そのラウンドは韓国人の負けになります。
+            <br />
+            4-2. 自分の残り時間が0秒になった場合、負けになります。
+          </p>
+        </div>
+      );
+    }
+
+    // 한국어 설명
+    return (
+      <div>
+        <h3 style={{ marginTop: 0, marginBottom: "8px" }}>게임 규칙</h3>
+        <p style={{ fontSize: "13px", marginBottom: "6px" }}>
+          1. 기본 설명
+        </p>
+        <p style={{ fontSize: "12px", margin: 0 }}>
+          1-1. 이 게임은 한국인과 일본인이 1대1로 겨루는 끝말잇기 게임입니다.
+          <br />
+          1-2. 한국인은 한국어 단어, 일본인은 일본어 단어를 사용합니다.
+          <br />
+          1-3. 게임 시작 시 한국어/일본어 랜덤 시작 단어가 함께 표시됩니다.
+          <br />
+          1-4. 각 플레이어는 개인 시간 90초를 가지고 게임을 진행합니다.
+        </p>
+        <p
+          style={{
+            fontSize: "13px",
+            marginBottom: "6px",
+            marginTop: "10px",
+          }}
+        >
+          2. 단어 잇기 규칙
+        </p>
+        <p style={{ fontSize: "12px", margin: 0 }}>
+          2-1. 한국인: 이전 단어의 “한국어 마지막 글자”로 시작하는 단어를
+          제출해야 합니다.
+          <br />
+          2-2. 일본인: 이전 단어의 “일본어 끝나는 소리”에 맞게 이어야 합니다.
+          <br />
+          2-3. 복합음, 촉음(っ), 장음(ー)은 발음 규칙에 따라 처리됩니다.
+          <br />
+          2-4. 화면의 “이어야 할 글자”에 현재 턴에서 이어야 할 글자가 표시됩니다.
+        </p>
+        <p
+          style={{
+            fontSize: "13px",
+            marginBottom: "6px",
+            marginTop: "10px",
+          }}
+        >
+          3. 승리 조건
+        </p>
+        <p style={{ fontSize: "12px", margin: 0 }}>
+          3-1. 상대방의 시간이 0초가 되면 승리합니다.
+          <br />
+          3-2. 상대가 규칙에 맞지 않는 단어를 제출하면 승리합니다.
+        </p>
+        <p
+          style={{
+            fontSize: "13px",
+            marginBottom: "6px",
+            marginTop: "10px",
+          }}
+        >
+          4. 패배 조건
+        </p>
+        <p style={{ fontSize: "12px", margin: 0 }}>
+          4-1. 한국인이 낸 단어의 일본어 번역이 ‘ん’으로 끝나면 한국인이 즉시
+          패배합니다.
+          <br />
+          4-2. 자신의 남은 시간이 0초가 되면 패배합니다.
+        </p>
+      </div>
+    );
+  };
+
+  // ===== 규칙 팝업 컴포넌트 =====
+  const RulesModal = () =>
+    showRules ? (
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          backgroundColor: "rgba(0,0,0,0.35)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 300,
+        }}
+      >
+        <div
+          style={{
+            ...cardStyle,
+            maxWidth: "520px",
+            width: "90%",
+            maxHeight: "80vh",
+            overflowY: "auto",
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "8px",
+            }}
+          >
+            <strong>
+              {language === "ja" ? "ゲームルール" : "게임 규칙"}
+            </strong>
+            <button
+              onClick={() => setShowRules(false)}
+              style={closeIconStyle}
+              aria-label="규칙 닫기"
+            >
+              ✕
+            </button>
+          </div>
+          {renderRulesContent()}
+          <div style={{ textAlign: "right", marginTop: "12px" }}>
+            <button
+              onClick={() => setShowRules(false)}
+              style={buttonStyle}
+            >
+              {T.close}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null;
+
   // ===== 렌더링 =====
 
   // 1단계: 국적 선택
   if (step === 1) {
     return (
       <div style={{ ...pageStyle, position: "relative" }}>
-        {/* 오른쪽 위 번역 버튼 */}
+        {/* 좌상단 규칙 보기 */}
+        <button
+          onClick={() => setShowRules(true)}
+          style={{
+            ...buttonStyle,
+            position: "fixed",
+            top: "16px",
+            left: "16px",
+            zIndex: 120,
+            fontSize: "12px",
+          }}
+        >
+          {T.showRules}
+        </button>
+
+        {/* 우상단 언어 토글 */}
         <button
           onClick={handleToggleUiLanguage}
           style={{
@@ -748,11 +981,13 @@ export default function RoomFlow() {
             position: "fixed",
             top: "16px",
             right: "16px",
-            zIndex: 100,
+            zIndex: 120,
           }}
         >
           {language === "ko" ? T.uiToggleToJa : T.uiToggleToKo}
         </button>
+
+        <RulesModal />
 
         <div style={{ textAlign: "center", marginTop: "80px" }}>
           <div style={{ ...cardStyle, maxWidth: "400px", margin: "0 auto" }}>
@@ -782,7 +1017,22 @@ export default function RoomFlow() {
   if (step === 2) {
     return (
       <div style={{ ...pageStyle, position: "relative" }}>
-        {/* 오른쪽 위 번역 버튼 */}
+        {/* 좌상단 규칙 보기 */}
+        <button
+          onClick={() => setShowRules(true)}
+          style={{
+            ...buttonStyle,
+            position: "fixed",
+            top: "16px",
+            left: "16px",
+            zIndex: 120,
+            fontSize: "12px",
+          }}
+        >
+          {T.showRules}
+        </button>
+
+        {/* 우상단 언어 토글 */}
         <button
           onClick={handleToggleUiLanguage}
           style={{
@@ -790,11 +1040,13 @@ export default function RoomFlow() {
             position: "fixed",
             top: "16px",
             right: "16px",
-            zIndex: 100,
+            zIndex: 120,
           }}
         >
           {language === "ko" ? T.uiToggleToJa : T.uiToggleToKo}
         </button>
+
+        <RulesModal />
 
         {/* 상단 바 */}
         <div
@@ -887,7 +1139,14 @@ export default function RoomFlow() {
 
         {/* 방 입장 */}
         {selectedRoom && (
-          <div style={{ ...cardStyle, marginBottom: "12px" }}>
+          <div style={{ ...cardStyle, marginBottom: "12px", position: "relative" }}>
+            <button
+              onClick={() => setSelectedRoom(null)}
+              style={{ ...closeIconStyle, position: "absolute", top: 8, right: 8 }}
+              aria-label="방 입장 닫기"
+            >
+              ✕
+            </button>
             <h3 style={{ marginTop: 0 }}>{T.enterRoomTitle}</h3>
             <p>
               {T.selectedRoomLabel}:{" "}
@@ -931,7 +1190,14 @@ export default function RoomFlow() {
 
         {/* 방 만들기 */}
         {isCreating && (
-          <div style={{ ...cardStyle, marginBottom: "12px" }}>
+          <div style={{ ...cardStyle, marginBottom: "12px", position: "relative" }}>
+            <button
+              onClick={() => setIsCreating(false)}
+              style={{ ...closeIconStyle, position: "absolute", top: 8, right: 8 }}
+              aria-label="방 만들기 닫기"
+            >
+              ✕
+            </button>
             <h3 style={{ marginTop: 0 }}>{T.createRoomTitle}</h3>
             <input
               type="text"
@@ -973,7 +1239,22 @@ export default function RoomFlow() {
   if (step === 3 && currentRoom) {
     return (
       <div style={{ ...pageStyle, position: "relative" }}>
-        {/* 오른쪽 위 번역 버튼 */}
+        {/* 좌상단 규칙 보기 */}
+        <button
+          onClick={() => setShowRules(true)}
+          style={{
+            ...buttonStyle,
+            position: "fixed",
+            top: "16px",
+            left: "16px",
+            zIndex: 120,
+            fontSize: "12px",
+          }}
+        >
+          {T.showRules}
+        </button>
+
+        {/* 우상단 언어 토글 */}
         <button
           onClick={handleToggleUiLanguage}
           style={{
@@ -981,11 +1262,13 @@ export default function RoomFlow() {
             position: "fixed",
             top: "16px",
             right: "16px",
-            zIndex: 100,
+            zIndex: 120,
           }}
         >
           {language === "ko" ? T.uiToggleToJa : T.uiToggleToKo}
         </button>
+
+        <RulesModal />
 
         {/* 방 정보 (가로 배치) */}
         <div style={{ ...cardStyle, marginBottom: "12px" }}>
@@ -1049,20 +1332,20 @@ export default function RoomFlow() {
             </div>
           )}
 
-          {/* 게임 중 (1판) */}
+          {/* 게임 중 */}
           {roomStage === "playing" && gameState && (
             <div
               style={{ display: "flex", flexDirection: "column", gap: "12px" }}
             >
-              {/* 상단 정보 3개 */}
+              {/* 상단 정보 4개 */}
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
                   gap: "8px",
                 }}
               >
-                {/* 현재 단어 (KO/JA 같이) */}
+                {/* 현재 단어 */}
                 <div
                   style={{
                     padding: "8px",
@@ -1086,7 +1369,7 @@ export default function RoomFlow() {
                   </div>
                 </div>
 
-                {/* 내 남은 시간 */}
+                {/* 내 시간 */}
                 <div
                   style={{
                     padding: "8px",
@@ -1110,6 +1393,30 @@ export default function RoomFlow() {
                   </div>
                 </div>
 
+                {/* 상대 시간 */}
+                <div
+                  style={{
+                    padding: "8px",
+                    borderRadius: "8px",
+                    backgroundColor: "#f9fafb",
+                    border: "1px solid #e5e7eb",
+                  }}
+                >
+                  <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                    {T.oppTime}
+                  </div>
+                  <div
+                    style={{
+                      fontWeight: 700,
+                      marginTop: "4px",
+                      color: "#dc2626",
+                    }}
+                  >
+                    {oppTime != null ? oppTime : "-"}
+                    {timerUnit}
+                  </div>
+                </div>
+
                 {/* 턴 */}
                 <div
                   style={{
@@ -1128,12 +1435,12 @@ export default function RoomFlow() {
                 </div>
               </div>
 
-              {/* 이어야 할 글자 힌트 – 현재 턴에 따라 한쪽만 */}
-              {(showKoHint || showJaHint) && (
+              {/* 이어야 할 글자 – 한쪽만일 땐 전체폭 사용 */}
+              {hintColumnCount > 0 && (
                 <div
                   style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                    gridTemplateColumns: `repeat(${hintColumnCount}, minmax(0, 1fr))`,
                     gap: "8px",
                   }}
                 >
@@ -1219,7 +1526,7 @@ export default function RoomFlow() {
                 </button>
               </form>
 
-              {/* 히스토리 (강화 버전) */}
+              {/* 히스토리 */}
               <div
                 style={{
                   marginTop: "4px",
