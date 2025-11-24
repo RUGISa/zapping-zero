@@ -304,7 +304,7 @@ export default function RoomFlow() {
     setRoomPasswordInput("");
     setTitleError("");
     setPasswordError("");
-    // 언어는 그대로 유지 (setLanguage("ko") 제거)
+    // 언어는 그대로 유지
   };
 
   const handleToggleUiLanguage = () => {
@@ -647,9 +647,7 @@ export default function RoomFlow() {
       : winnerType === playerType
       ? "나"
       : winnerType === "korean"
-      ? language === "ja"
-        ? "韓国人"
-        : "한국인"
+      ? (language === "ja" ? "韓国人" : "한국인")
       : language === "ja"
       ? "日本人"
       : "일본인";
@@ -860,8 +858,8 @@ export default function RoomFlow() {
           2. 단어 잇기 규칙
         </p>
         <p style={{ fontSize: "12px", margin: 0 }}>
-          2-1. 한국인: 이전 단어의 “한국어 마지막 글자”로 시작하는 단어를
-          제출해야 합니다.
+          2-1. 한국인: 이전 단어의 “한국어 마지막 글자”로 시작하는 단어를 제출해야
+          합니다.
           <br />
           2-2. 일본인: 이전 단어의 “일본어 끝나는 소리”에 맞게 이어야 합니다.
           <br />
@@ -936,9 +934,7 @@ export default function RoomFlow() {
               marginBottom: "8px",
             }}
           >
-            <strong>
-              {language === "ja" ? "ゲームルール" : "게임 규칙"}
-            </strong>
+            <strong>{language === "ja" ? "ゲームルール" : "게임 규칙"}</strong>
             <button
               onClick={() => setShowRules(false)}
               style={closeIconStyle}
@@ -949,10 +945,7 @@ export default function RoomFlow() {
           </div>
           {renderRulesContent()}
           <div style={{ textAlign: "right", marginTop: "12px" }}>
-            <button
-              onClick={() => setShowRules(false)}
-              style={buttonStyle}
-            >
+            <button onClick={() => setShowRules(false)} style={buttonStyle}>
               {T.close}
             </button>
           </div>
@@ -999,15 +992,17 @@ export default function RoomFlow() {
 
         <div style={{ textAlign: "center", marginTop: "80px" }}>
           {/* 게임 이름 */}
-          <h1 style={{ 
-            fontSize: "32px", 
-            fontWeight: "bold", 
-            marginBottom: "40px",
-            color: "#111827"
-          }}>
+          <h1
+            style={{
+              fontSize: "32px",
+              fontWeight: "bold",
+              marginBottom: "40px",
+              color: "#111827",
+            }}
+          >
             {language === "ko" ? "한・일 끝말잇기" : "日・韓しりとり"}
           </h1>
-          
+
           <div style={{ ...cardStyle, maxWidth: "400px", margin: "0 auto" }}>
             <h2 style={{ marginTop: 0 }}>{T.selectTitle}</h2>
             <p>{T.selectDesc}</p>
@@ -1085,10 +1080,7 @@ export default function RoomFlow() {
               {T.btnChangeNation}
             </button>
           </div>
-          <button
-            onClick={handleToggleCreateRoom}
-            style={primaryButtonStyle}
-          >
+          <button onClick={handleToggleCreateRoom} style={primaryButtonStyle}>
             {T.createRoomBtn}
           </button>
         </div>
@@ -1123,9 +1115,7 @@ export default function RoomFlow() {
               style={inputStyle}
             />
             {titleError && (
-              <p style={{ color: "#b91c1c", fontSize: "12px" }}>
-                {titleError}
-              </p>
+              <p style={{ color: "#b91c1c", fontSize: "12px" }}>{titleError}</p>
             )}
 
             <input
@@ -1206,9 +1196,7 @@ export default function RoomFlow() {
                   >
                     <div>
                       <strong>{room.roomName}</strong>{" "}
-                      <span
-                        style={{ fontSize: "12px", color: "#6b7280" }}
-                      >
+                      <span style={{ fontSize: "12px", color: "#6b7280" }}>
                         ({getPlayerTypeLabel(room.creatorType)})
                       </span>
                       {room.hasPassword && (
@@ -1237,8 +1225,7 @@ export default function RoomFlow() {
                         borderRadius: "8px",
                         border: "1px solid #d1d5db",
                         backgroundColor: "#ffffff",
-                        boxShadow:
-                          "0 2px 4px rgba(15, 23, 42, 0.06)",
+                        boxShadow: "0 2px 4px rgba(15, 23, 42, 0.06)",
                         position: "relative",
                       }}
                     >
@@ -1415,11 +1402,12 @@ export default function RoomFlow() {
                     : T.waitingGuest
                   : T.waitingHost}
               </p>
-              {isHost && (
+
+              {/* 방장 + 게스트가 있을 때만 버튼 표시 */}
+              {isHost && roomInfo?.guestId && (
                 <button
                   onClick={handleGameStart}
                   style={primaryButtonStyle}
-                  disabled={!roomInfo?.guestId}
                 >
                   {T.startGame}
                 </button>
@@ -1440,8 +1428,7 @@ export default function RoomFlow() {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns:
-                    "repeat(4, minmax(0, 1fr))",
+                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
                   gap: "8px",
                 }}
               >
@@ -1462,16 +1449,12 @@ export default function RoomFlow() {
                   >
                     {T.currentWord}
                   </div>
-                  <div
-                    style={{ marginTop: "4px", fontSize: "13px" }}
-                  >
+                  <div style={{ marginTop: "4px", fontSize: "13px" }}>
                     <div>
-                      <strong>KO:</strong>{" "}
-                      {gameState?.currentWord?.ko || "-"}
+                      <strong>KO:</strong> {gameState?.currentWord?.ko || "-"}
                     </div>
                     <div>
-                      <strong>JA:</strong>{" "}
-                      {gameState?.currentWord?.ja || "-"}
+                      <strong>JA:</strong> {gameState?.currentWord?.ja || "-"}
                     </div>
                   </div>
                 </div>
@@ -1624,9 +1607,7 @@ export default function RoomFlow() {
                       >
                         {nextJaFirst || nextJaSecond
                           ? `${nextJaFirst || ""}${
-                              nextJaFirst && nextJaSecond
-                                ? " / "
-                                : ""
+                              nextJaFirst && nextJaSecond ? " / " : ""
                             }${nextJaSecond || ""}`
                           : "-"}
                       </div>
@@ -1646,9 +1627,7 @@ export default function RoomFlow() {
                 <input
                   type="text"
                   value={inputWord}
-                  onChange={(e) =>
-                    setInputWord(e.target.value)
-                  }
+                  onChange={(e) => setInputWord(e.target.value)}
                   placeholder="단어를 입력하세요"
                   disabled={!isMyTurn}
                   style={inputStyle}
@@ -1666,7 +1645,7 @@ export default function RoomFlow() {
                 </button>
               </form>
 
-              {/* 히스토리 */}
+              {/* 히스토리 (최신 단어가 위, 번호는 N→1) */}
               <div
                 style={{
                   marginTop: "4px",
@@ -1687,8 +1666,7 @@ export default function RoomFlow() {
                 >
                   {T.history}
                 </div>
-                {!gameState.history ||
-                gameState.history.length === 0 ? (
+                {!gameState.history || gameState.history.length === 0 ? (
                   <p
                     style={{
                       fontSize: "13px",
@@ -1705,11 +1683,9 @@ export default function RoomFlow() {
                       gap: "6px",
                     }}
                   >
-                    {gameState.history.map((h, idx) => {
-                      const isMine =
-                        h.player === playerType;
-                      const playerLabel =
-                        getPlayerTypeLabel(h.player);
+                    {[...gameState.history].reverse().map((h, idx) => {
+                      const isMine = h.player === playerType;
+                      const playerLabel = getPlayerTypeLabel(h.player);
 
                       const wordLang =
                         h.player === "korean"
@@ -1736,16 +1712,13 @@ export default function RoomFlow() {
                             padding: "6px 8px",
                             borderRadius: "8px",
                             border: "1px solid #e5e7eb",
-                            backgroundColor: isMine
-                              ? "#eff6ff"
-                              : "#ffffff",
+                            backgroundColor: isMine ? "#eff6ff" : "#ffffff",
                           }}
                         >
                           <div
                             style={{
                               display: "flex",
-                              justifyContent:
-                                "space-between",
+                              justifyContent: "space-between",
                               fontSize: "12px",
                               marginBottom: "2px",
                             }}
@@ -1756,16 +1729,13 @@ export default function RoomFlow() {
                                 color: "#4b5563",
                               }}
                             >
-                              #{idx + 1} ·{" "}
-                              {playerLabel}
+                              #{gameState.history.length - idx} · {playerLabel}
                             </span>
                             <span
                               style={{
                                 padding: "0 6px",
-                                borderRadius:
-                                  "999px",
-                                border:
-                                  "1px solid #d1d5db",
+                                borderRadius: "999px",
+                                border: "1px solid #d1d5db",
                                 fontSize: "11px",
                                 backgroundColor: isMine
                                   ? "#dbeafe"
@@ -1789,16 +1759,10 @@ export default function RoomFlow() {
                             }}
                           >
                             <div>
-                              <strong>
-                                {wordLang}:
-                              </strong>{" "}
-                              {h.word}
+                              <strong>{wordLang}:</strong> {h.word}
                             </div>
                             <div>
-                              <strong>
-                                {translatedLang}:
-                              </strong>{" "}
-                              {h.translated}
+                              <strong>{translatedLang}:</strong> {h.translated}
                             </div>
                           </div>
                         </div>
@@ -1817,8 +1781,7 @@ export default function RoomFlow() {
               <p>
                 {T.winner}:{" "}
                 <strong>
-                  {winnerLabel ||
-                    "결과를 불러오지 못했습니다."}
+                  {winnerLabel || "결과를 불러오지 못했습니다."}
                 </strong>
               </p>
               <p
@@ -1827,8 +1790,7 @@ export default function RoomFlow() {
                   color: "#6b7280",
                 }}
               >
-                (다시 하려면 방을 나갔다가 새 방을 만들거나
-                입장해주세요.)
+                (다시 하려면 방을 나갔다가 새 방을 만들거나 입장해주세요.)
               </p>
             </div>
           )}
@@ -1840,10 +1802,7 @@ export default function RoomFlow() {
               textAlign: "right",
             }}
           >
-            <button
-              onClick={handleLeaveRoom}
-              style={buttonStyle}
-            >
+            <button onClick={handleLeaveRoom} style={buttonStyle}>
               {T.leaveRoom}
             </button>
           </div>
@@ -1869,10 +1828,7 @@ export default function RoomFlow() {
         }}
       >
         <p>오류가 발생했습니다. 처음으로 돌아갑니다.</p>
-        <button
-          onClick={() => setStep(1)}
-          style={primaryButtonStyle}
-        >
+        <button onClick={() => setStep(1)} style={primaryButtonStyle}>
           처음으로
         </button>
       </div>
