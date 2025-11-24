@@ -433,8 +433,14 @@ export default function RoomFlow() {
 
   // ===== 방 입장 =====
   const handleSelectRoomForJoin = (room) => {
-    setSelectedRoom(room);
-    setJoinPasswordInput("");
+    // 이미 선택된 방을 다시 클릭하면 선택 해제
+    if (selectedRoom?.roomId === room.roomId) {
+      setSelectedRoom(null);
+      setJoinPasswordInput("");
+    } else {
+      setSelectedRoom(room);
+      setJoinPasswordInput("");
+    }
   };
 
   const handleJoinRoom = async () => {
@@ -900,6 +906,7 @@ export default function RoomFlow() {
   const RulesModal = () =>
     showRules ? (
       <div
+        onClick={() => setShowRules(false)}
         style={{
           position: "fixed",
           inset: 0,
@@ -911,6 +918,7 @@ export default function RoomFlow() {
         }}
       >
         <div
+          onClick={(e) => e.stopPropagation()}
           style={{
             ...cardStyle,
             maxWidth: "520px",
@@ -990,8 +998,18 @@ export default function RoomFlow() {
         <RulesModal />
 
         <div style={{ textAlign: "center", marginTop: "80px" }}>
+          {/* 게임 이름 */}
+          <h1 style={{ 
+            fontSize: "32px", 
+            fontWeight: "bold", 
+            marginBottom: "40px",
+            color: "#111827"
+          }}>
+            {language === "ko" ? "한・일 끝말잇기" : "日・韓しりとり"}
+          </h1>
+          
           <div style={{ ...cardStyle, maxWidth: "400px", margin: "0 auto" }}>
-            <h1 style={{ marginTop: 0 }}>{T.selectTitle}</h1>
+            <h2 style={{ marginTop: 0 }}>{T.selectTitle}</h2>
             <p>{T.selectDesc}</p>
             <div style={{ marginTop: "16px" }}>
               <button
@@ -1072,123 +1090,7 @@ export default function RoomFlow() {
           </button>
         </div>
 
-        {/* 방 목록 헤더 */}
-        <div
-          style={{
-            marginBottom: "8px",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <h2 style={{ margin: 0 }}>{T.roomListTitle}</h2>
-          <button
-            onClick={handleRefreshRooms}
-            style={{ ...buttonStyle, fontSize: "12px" }}
-          >
-            {T.btnRefresh}
-          </button>
-        </div>
-
-        {/* 방 리스트 */}
-        <div style={{ ...cardStyle, marginBottom: "12px" }}>
-          {rooms.length === 0 ? (
-            <p>{T.noRooms}</p>
-          ) : (
-            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-              {rooms.map((room) => (
-                <li
-                  key={room.roomId}
-                  onClick={() => handleSelectRoomForJoin(room)}
-                  style={{
-                    padding: "8px 10px",
-                    borderRadius: "8px",
-                    border: "1px solid #e5e7eb",
-                    marginBottom: "6px",
-                    cursor: "pointer",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <div>
-                    <strong>{room.roomName}</strong>{" "}
-                    <span style={{ fontSize: "12px", color: "#6b7280" }}>
-                      ({getPlayerTypeLabel(room.creatorType)})
-                    </span>
-                    {room.hasPassword && (
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "#b91c1c",
-                          marginLeft: "6px",
-                        }}
-                      >
-                        🔒
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: "13px", color: "#6b7280" }}>
-                    {T.roomWaitingLabel}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        {/* 방 입장 */}
-        {selectedRoom && (
-          <div style={{ ...cardStyle, marginBottom: "12px", position: "relative" }}>
-            <button
-              onClick={() => setSelectedRoom(null)}
-              style={{ ...closeIconStyle, position: "absolute", top: 8, right: 8 }}
-              aria-label="방 입장 닫기"
-            >
-              ✕
-            </button>
-            <h3 style={{ marginTop: 0 }}>{T.enterRoomTitle}</h3>
-            <p>
-              {T.selectedRoomLabel}:{" "}
-              <strong>{selectedRoom.roomName}</strong>
-            </p>
-            <p style={{ fontSize: "12px", color: "#6b7280" }}>
-              {T.thisIsOppNationRoom}
-            </p>
-
-            {selectedRoom.hasPassword ? (
-              <>
-                <input
-                  type="password"
-                  placeholder={T.inputPasswordPlaceholder}
-                  value={joinPasswordInput}
-                  onChange={(e) => setJoinPasswordInput(e.target.value)}
-                  style={inputStyle}
-                />
-                <button
-                  onClick={handleJoinRoom}
-                  style={{ ...primaryButtonStyle, width: "100%" }}
-                >
-                  {T.btnEnter}
-                </button>
-              </>
-            ) : (
-              <>
-                <p style={{ fontSize: "12px", color: "#6b7280" }}>
-                  {T.noPasswordRoom}
-                </p>
-                <button
-                  onClick={handleJoinRoom}
-                  style={{ ...primaryButtonStyle, width: "100%" }}
-                >
-                  {T.btnEnterDirect}
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
-        {/* 방 만들기 */}
+        {/* 방 만들기 (방 목록 위로 이동) */}
         {isCreating && (
           <div style={{ ...cardStyle, marginBottom: "12px", position: "relative" }}>
             <button
@@ -1231,6 +1133,132 @@ export default function RoomFlow() {
             </button>
           </div>
         )}
+
+        {/* 방 목록 헤더 */}
+        <div
+          style={{
+            marginBottom: "8px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <h2 style={{ margin: 0 }}>{T.roomListTitle}</h2>
+          <button
+            onClick={handleRefreshRooms}
+            style={{ ...buttonStyle, fontSize: "12px" }}
+          >
+            {T.btnRefresh}
+          </button>
+        </div>
+
+        {/* 방 리스트 */}
+        <div style={{ ...cardStyle, marginBottom: "12px" }}>
+          {rooms.length === 0 ? (
+            <p>{T.noRooms}</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              {rooms.map((room) => (
+                <div key={room.roomId}>
+                  {/* 방 항목 */}
+                  <div
+                    onClick={() => handleSelectRoomForJoin(room)}
+                    style={{
+                      padding: "8px 10px",
+                      borderRadius: "8px",
+                      border: "1px solid #e5e7eb",
+                      cursor: "pointer",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      backgroundColor: selectedRoom?.roomId === room.roomId ? "#f0f9ff" : "transparent",
+                      userSelect: "none",
+                    }}
+                  >
+                    <div>
+                      <strong>{room.roomName}</strong>{" "}
+                      <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                        ({getPlayerTypeLabel(room.creatorType)})
+                      </span>
+                      {room.hasPassword && (
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            color: "#b91c1c",
+                            marginLeft: "6px",
+                          }}
+                        >
+                          🔒
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ fontSize: "13px", color: "#6b7280" }}>
+                      {T.roomWaitingLabel}
+                    </div>
+                  </div>
+
+                  {/* 방 입장 (클릭한 방 바로 아래) */}
+                  {selectedRoom?.roomId === room.roomId && (
+                    <div style={{ 
+                      marginTop: "6px",
+                      padding: "12px",
+                      borderRadius: "8px",
+                      border: "1px solid #d1d5db",
+                      backgroundColor: "#ffffff",
+                      boxShadow: "0 2px 4px rgba(15, 23, 42, 0.06)",
+                      position: "relative"
+                    }}>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedRoom(null);
+                        }}
+                        style={{ ...closeIconStyle, position: "absolute", top: 8, right: 8 }}
+                        aria-label="방 입장 닫기"
+                      >
+                        ✕
+                      </button>
+                      <h4 style={{ marginTop: 0, marginBottom: "8px" }}>{T.enterRoomTitle}</h4>
+                      <p style={{ fontSize: "12px", color: "#6b7280", marginBottom: "8px" }}>
+                        {T.thisIsOppNationRoom}
+                      </p>
+
+                      {selectedRoom.hasPassword ? (
+                        <>
+                          <input
+                            type="password"
+                            placeholder={T.inputPasswordPlaceholder}
+                            value={joinPasswordInput}
+                            onChange={(e) => setJoinPasswordInput(e.target.value)}
+                            style={inputStyle}
+                          />
+                          <button
+                            onClick={handleJoinRoom}
+                            style={{ ...primaryButtonStyle, width: "100%", marginTop: "6px" }}
+                          >
+                            {T.btnEnter}
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <p style={{ fontSize: "12px", color: "#6b7280", marginBottom: "8px" }}>
+                            {T.noPasswordRoom}
+                          </p>
+                          <button
+                            onClick={handleJoinRoom}
+                            style={{ ...primaryButtonStyle, width: "100%" }}
+                          >
+                            {T.btnEnterDirect}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
