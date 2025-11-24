@@ -645,9 +645,11 @@ export default function RoomFlow() {
     winnerType == null
       ? ""
       : winnerType === playerType
-      ? "나"
+      ? (language === "ja" ? "自分" : "나")
       : winnerType === "korean"
-      ? (language === "ja" ? "韓国人" : "한국인")
+      ? language === "ja"
+        ? "韓国人"
+        : "한국인"
       : language === "ja"
       ? "日本人"
       : "일본인";
@@ -789,11 +791,11 @@ export default function RoomFlow() {
             2. 単語をつなぐルール
           </p>
           <p style={{ fontSize: "12px", margin: 0 }}>
-            2-1. 韓国人：前の単語의「韓国語の最後の文字」から始まる単語を出します。
+            2-1. 韓国人：前の単語の「韓国語の最後の文字」から始まる単語を出します。
             <br />
-            2-2. 日本人：前の単語의「日本語の最後の音」につながる単語を出します。
+            2-2. 日本人：前の単語の「日本語の最後の音」につながる単語を出します。
             <br />
-            2-3. 拗音（しゃ・しゅ・しょ など）、促音（っ）、長音（ー）は発音ルール에従って処理されます。
+            2-3. 拗音（しゃ・しゅ・しょ など）、促音（っ）、長音（ー）は発音ルールに従って処理されます。
             <br />
             2-4. 画面の「次の頭文字」に、現在のターンでつなぐべき文字が表示されます。
           </p>
@@ -823,7 +825,7 @@ export default function RoomFlow() {
             4. 敗北条件
           </p>
           <p style={{ fontSize: "12px", margin: 0 }}>
-            4-1. 韓国人が出した単語의「日本語訳」が「ん」で終わる場合、
+            4-1. 韓国人が出した単語の「日本語訳」が「ん」で終わる場合、
             そのラウンドは韓国人の負けになります。
             <br />
             4-2. 自分の残り時間が0秒になった場合、負けになります。
@@ -858,8 +860,8 @@ export default function RoomFlow() {
           2. 단어 잇기 규칙
         </p>
         <p style={{ fontSize: "12px", margin: 0 }}>
-          2-1. 한국인: 이전 단어의 “한국어 마지막 글자”로 시작하는 단어를 제출해야
-          합니다.
+          2-1. 한국인: 이전 단어의 “한국어 마지막 글자”로 시작하는 단어를
+          제출해야 합니다.
           <br />
           2-2. 일본인: 이전 단어의 “일본어 끝나는 소리”에 맞게 이어야 합니다.
           <br />
@@ -952,6 +954,133 @@ export default function RoomFlow() {
         </div>
       </div>
     ) : null;
+
+  // ===== 히스토리 섹션 공통 렌더링 =====
+  const renderHistorySection = () => (
+    <div
+      style={{
+        marginTop: "12px",
+        padding: "8px",
+        borderRadius: "8px",
+        border: "1px solid #e5e7eb",
+        maxHeight: "240px",
+        overflowY: "auto",
+        backgroundColor: "#f9fafb",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "12px",
+          color: "#6b7280",
+          marginBottom: "4px",
+        }}
+      >
+        {T.history}
+      </div>
+      {!gameState?.history || gameState.history.length === 0 ? (
+        <p
+          style={{
+            fontSize: "13px",
+            marginTop: "4px",
+          }}
+        >
+          {T.noHistory}
+        </p>
+      ) : (
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "6px",
+          }}
+        >
+          {[...gameState.history].reverse().map((h, idx) => {
+            const isMine = h.player === playerType;
+            const playerLabel = getPlayerTypeLabel(h.player);
+
+            const wordLang =
+              h.player === "korean"
+                ? language === "ja"
+                  ? "韓国語"
+                  : "한국어"
+                : language === "ja"
+                ? "日本語"
+                : "일본어";
+
+            const translatedLang =
+              h.player === "korean"
+                ? language === "ja"
+                  ? "日本語"
+                  : "일본어"
+                : language === "ja"
+                ? "韓国語"
+                : "한국어";
+
+            return (
+              <div
+                key={idx}
+                style={{
+                  padding: "6px 8px",
+                  borderRadius: "8px",
+                  border: "1px solid #e5e7eb",
+                  backgroundColor: isMine ? "#eff6ff" : "#ffffff",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    fontSize: "12px",
+                    marginBottom: "2px",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      color: "#4b5563",
+                    }}
+                  >
+                    #{gameState.history.length - idx} · {playerLabel}
+                  </span>
+                  <span
+                    style={{
+                      padding: "0 6px",
+                      borderRadius: "999px",
+                      border: "1px solid #d1d5db",
+                      fontSize: "11px",
+                      backgroundColor: isMine ? "#dbeafe" : "#f3f4f6",
+                    }}
+                  >
+                    {isMine
+                      ? language === "ja"
+                        ? "自分"
+                        : "나"
+                      : language === "ja"
+                      ? "相手"
+                      : "상대"}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "12px",
+                    color: "#374151",
+                  }}
+                >
+                  <div>
+                    <strong>{wordLang}:</strong> {h.word}
+                  </div>
+                  <div>
+                    <strong>{translatedLang}:</strong> {h.translated}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 
   // ===== 렌더링 =====
 
@@ -1319,6 +1448,17 @@ export default function RoomFlow() {
 
   // 3단계: 방 안
   if (step === 3 && currentRoom) {
+    // 게임 결과 fallback 문구 (언어별)
+    const resultFallback =
+      language === "ja"
+        ? "結果を読み込めませんでした。"
+        : "결과를 불러오지 못했습니다.";
+
+    const replayHint =
+      language === "ja"
+        ? "もう一度プレイするには、部屋を退出して新しい部屋を作成するか、他の部屋に入室してください。"
+        : "(다시 하려면 방을 나갔다가 새 방을 만들거나 입장해주세요.)";
+
     return (
       <div style={{ ...pageStyle, position: "relative" }}>
         {/* 좌상단 규칙 보기 */}
@@ -1645,167 +1785,48 @@ export default function RoomFlow() {
                 </button>
               </form>
 
-              {/* 히스토리 (최신 단어가 위, 번호는 N→1) */}
-              <div
-                style={{
-                  marginTop: "4px",
-                  padding: "8px",
-                  borderRadius: "8px",
-                  border: "1px solid #e5e7eb",
-                  maxHeight: "240px",
-                  overflowY: "auto",
-                  backgroundColor: "#f9fafb",
-                }}
-              >
-                <div
-                  style={{
-                    fontSize: "12px",
-                    color: "#6b7280",
-                    marginBottom: "4px",
-                  }}
-                >
-                  {T.history}
-                </div>
-                {!gameState.history || gameState.history.length === 0 ? (
-                  <p
-                    style={{
-                      fontSize: "13px",
-                      marginTop: "4px",
-                    }}
-                  >
-                    {T.noHistory}
-                  </p>
-                ) : (
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      gap: "6px",
-                    }}
-                  >
-                    {[...gameState.history].reverse().map((h, idx) => {
-                      const isMine = h.player === playerType;
-                      const playerLabel = getPlayerTypeLabel(h.player);
-
-                      const wordLang =
-                        h.player === "korean"
-                          ? language === "ja"
-                            ? "韓国語"
-                            : "한국어"
-                          : language === "ja"
-                          ? "日本語"
-                          : "일본어";
-
-                      const translatedLang =
-                        h.player === "korean"
-                          ? language === "ja"
-                            ? "日本語"
-                            : "일본어"
-                          : language === "ja"
-                          ? "韓国語"
-                          : "한국어";
-
-                      return (
-                        <div
-                          key={idx}
-                          style={{
-                            padding: "6px 8px",
-                            borderRadius: "8px",
-                            border: "1px solid #e5e7eb",
-                            backgroundColor: isMine ? "#eff6ff" : "#ffffff",
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: "flex",
-                              justifyContent: "space-between",
-                              fontSize: "12px",
-                              marginBottom: "2px",
-                            }}
-                          >
-                            <span
-                              style={{
-                                fontWeight: 600,
-                                color: "#4b5563",
-                              }}
-                            >
-                              #{gameState.history.length - idx} · {playerLabel}
-                            </span>
-                            <span
-                              style={{
-                                padding: "0 6px",
-                                borderRadius: "999px",
-                                border: "1px solid #d1d5db",
-                                fontSize: "11px",
-                                backgroundColor: isMine
-                                  ? "#dbeafe"
-                                  : "#f3f4f6",
-                              }}
-                            >
-                              {isMine
-                                ? language === "ja"
-                                  ? "自分"
-                                  : "나"
-                                : language === "ja"
-                                ? "相手"
-                                : "상대"}
-                            </span>
-                          </div>
-
-                          <div
-                            style={{
-                              fontSize: "12px",
-                              color: "#374151",
-                            }}
-                          >
-                            <div>
-                              <strong>{wordLang}:</strong> {h.word}
-                            </div>
-                            <div>
-                              <strong>{translatedLang}:</strong> {h.translated}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
+              {/* 히스토리 (공통 함수 사용) */}
+              {renderHistorySection()}
             </div>
           )}
 
           {/* 게임 종료 */}
           {roomStage === "finished" && gameState && (
-            <div style={{ textAlign: "center" }}>
-              <h3>{T.gameOver}</h3>
-              <p>
-                {T.winner}:{" "}
-                <strong>
-                  {winnerLabel || "결과를 불러오지 못했습니다."}
-                </strong>
-              </p>
-              <p
-                style={{
-                  fontSize: "13px",
-                  color: "#6b7280",
-                }}
-              >
-                (다시 하려면 방을 나갔다가 새 방을 만들거나 입장해주세요.)
-              </p>
+            <div>
+              <div style={{ textAlign: "center" }}>
+                <h3>{T.gameOver}</h3>
+                <p>
+                  {T.winner}:{" "}
+                  <strong>{winnerLabel || resultFallback}</strong>
+                </p>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    color: "#6b7280",
+                  }}
+                >
+                  {replayHint}
+                </p>
+              </div>
+
+              {/* 종료 후 히스토리 표시 */}
+              {renderHistorySection()}
             </div>
           )}
 
-          {/* 방 나가기 */}
-          <div
-            style={{
-              marginTop: "16px",
-              textAlign: "right",
-            }}
-          >
-            <button onClick={handleLeaveRoom} style={buttonStyle}>
-              {T.leaveRoom}
-            </button>
-          </div>
+          {/* 방 나가기 – 게임 중에는 숨김 */}
+          {roomStage !== "playing" && (
+            <div
+              style={{
+                marginTop: "16px",
+                textAlign: "right",
+              }}
+            >
+              <button onClick={handleLeaveRoom} style={buttonStyle}>
+                {T.leaveRoom}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
