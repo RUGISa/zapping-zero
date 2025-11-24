@@ -135,74 +135,63 @@ const getKoreanNextChar = (word) => {
   return trimmed[trimmed.length - 1];
 };
 
-// 일본어: 복합음/장음/촉음 규칙 + 가나만 추출
+// 일본어: 장음/촉음/복합음 규칙
 const isKana = (ch) => !!ch && /[ぁ-ゟ゠-ヿー]/.test(ch);
 
-const VOWEL_A =
-  "あかさたなはまやらわがざだばぱぁゃァャアカサタナハマヤラワガザダバパ";
-const VOWEL_I =
-  "いきしちにひみりぎじぢびぴぃィイキシチニヒミリギジヂビピ";
-const VOWEL_U =
-  "うくすつぬふむゆるゔぐずづぶぷぅゅゥュウクスツヌフムユルヴグズヅブプ";
-const VOWEL_E =
-  "えけせてねへめれげぜでべぺぇエケセテネヘメレゲゼデベペェれレ";
-const VOWEL_O =
-  "おこそとのほもよろをごぞどぼぽぉょオコソトノホモヨロヲゴゾドボポォョ";
+const SOKUON = "っッ"; // 촉음
+const LONG_MARK = "ー"; // 장음 기호
 
-const getVowelHiragana = (ch) => {
-  if (!ch) return null;
-  if (VOWEL_A.includes(ch)) return "あ";
-  if (VOWEL_I.includes(ch)) return "い";
-  if (VOWEL_U.includes(ch)) return "う";
-  if (VOWEL_E.includes(ch)) return "え";
-  if (VOWEL_O.includes(ch)) return "お";
-  return null;
+// 작은 가나 → 큰 가나 매핑
+const SMALL_TO_BIG = {
+  "ゃ": "や",
+  "ゅ": "ゆ",
+  "ょ": "よ",
+  "ャ": "ヤ",
+  "ュ": "ユ",
+  "ョ": "ヨ",
+  "ぁ": "あ",
+  "ぃ": "い",
+  "ぅ": "う",
+  "ぇ": "え",
+  "ぉ": "お",
+  "ァ": "ア",
+  "ィ": "イ",
+  "ゥ": "ウ",
+  "ェ": "エ",
+  "ォ": "オ",
+  "ゎ": "わ",
+  "ヮ": "ワ",
 };
 
-const SMALL_KANA = "ゃゅょャュョァィゥェォヮ";
-const LONG_MARK = "ー";
-const SOKUON = "っッ";
+const getJapaneseNextChar = (word) => {
+  if (!word) return null;
 
-const getJapaneseNextChars = (word) => {
-  if (!word) return { first: null, second: null };
-
+  // 가나만 추출
   const kanaOnly = word.replace(/[^ぁ-ゟ゠-ヿー]/g, "");
   const trimmed = kanaOnly.trim();
   const len = trimmed.length;
-  if (len === 0) return { first: null, second: null };
+  if (len === 0) return null;
 
-  let first = null;
-  let second = null;
   const last = trimmed[len - 1];
 
-  if (SMALL_KANA.includes(last)) {
+  // 1) 장음: 바로 앞 문자로 잇기
+  if (last === LONG_MARK) {
     const base = len >= 2 ? trimmed[len - 2] : null;
-    if (isKana(base)) first = base;
-    if (isKana(last)) second = last;
-    return { first, second };
+    return isKana(base) ? base : null;
   }
 
-  if (LONG_MARK.includes(last)) {
-    const base = len >= 2 ? trimmed[len - 2] : null;
-    if (isKana(base)) {
-      first = base;
-      second = getVowelHiragana(base);
-      return { first, second };
-    }
-    return { first: null, second: null };
-  }
-
+  // 2) 촉음: っ / ッ 그대로 잇기
   if (SOKUON.includes(last)) {
-    const base = len >= 2 ? trimmed[len - 2] : null;
-    if (isKana(base)) return { first: base, second: null };
-    return { first: null, second: null };
+    return last;
   }
 
-  if (isKana(last)) {
-    return { first: null, second: last };
+  // 3) 복합음: 작은 가나는 대응하는 큰 가나로 (しゃ → や)
+  if (SMALL_TO_BIG[last]) {
+    return SMALL_TO_BIG[last];
   }
 
-  return { first: null, second: null };
+  // 4) 그 외: 마지막 가나 그대로
+  return isKana(last) ? last : null;
 };
 
 export default function RoomFlow() {
@@ -657,9 +646,7 @@ export default function RoomFlow() {
   const timerUnit = language === "ja" ? "秒" : "초";
 
   const nextKoChar = getKoreanNextChar(gameState?.currentWord?.ko);
-  const { first: nextJaFirst, second: nextJaSecond } = getJapaneseNextChars(
-    gameState?.currentWord?.ja || ""
-  );
+  const nextJaChar = getJapaneseNextChar(gameState?.currentWord?.ja || "");
 
   const showKoHint = gameState?.currentTurn === "korean";
   const showJaHint = gameState?.currentTurn === "japanese";
@@ -778,7 +765,7 @@ export default function RoomFlow() {
             <br />
             1-3. ゲーム開始時に、韓国語と日本語でランダムな開始単語が表示されます。
             <br />
-            1-4. 각 플레이어는 個人タイマー90秒を持ってゲームを行います。
+            1-4. 各プレイヤーは個人タイマー90秒を持ってゲームを行います。
           </p>
 
           <p
@@ -1745,11 +1732,7 @@ export default function RoomFlow() {
                           marginTop: "4px",
                         }}
                       >
-                        {nextJaFirst || nextJaSecond
-                          ? `${nextJaFirst || ""}${
-                              nextJaFirst && nextJaSecond ? " / " : ""
-                            }${nextJaSecond || ""}`
-                          : "-"}
+                        {nextJaChar || "-"}
                       </div>
                     </div>
                   )}
@@ -1785,7 +1768,7 @@ export default function RoomFlow() {
                 </button>
               </form>
 
-              {/* 히스토리 (공통 함수 사용) */}
+              {/* 히스토리 */}
               {renderHistorySection()}
             </div>
           )}
