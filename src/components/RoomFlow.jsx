@@ -304,7 +304,7 @@ export default function RoomFlow() {
     setRoomPasswordInput("");
     setTitleError("");
     setPasswordError("");
-    setLanguage("ko");
+    // 언어는 그대로 유지 (setLanguage("ko") 제거)
   };
 
   const handleToggleUiLanguage = () => {
@@ -778,7 +778,7 @@ export default function RoomFlow() {
             <br />
             1-3. ゲーム開始時に、韓国語と日本語でランダムな開始単語が表示されます。
             <br />
-            1-4. 各プレイヤーは個人タイマー90秒を持ってゲームを行います。
+            1-4. 각 플레이어는 個人タイマー90秒を持ってゲームを行います。
           </p>
 
           <p
@@ -791,11 +791,11 @@ export default function RoomFlow() {
             2. 単語をつなぐルール
           </p>
           <p style={{ fontSize: "12px", margin: 0 }}>
-            2-1. 韓国人：前の単語の「韓国語の最後の文字」から始まる単語を出します。
+            2-1. 韓国人：前の単語의「韓国語の最後の文字」から始まる単語を出します。
             <br />
-            2-2. 日本人：前の単語の「日本語の最後の音」につながる単語を出します。
+            2-2. 日本人：前の単語의「日本語の最後の音」につながる単語を出します。
             <br />
-            2-3. 拗音（しゃ・しゅ・しょ など）、促音（っ）、長音（ー）は発音ルールに従って処理されます。
+            2-3. 拗音（しゃ・しゅ・しょ など）、促音（っ）、長音（ー）は発音ルール에従って処理されます。
             <br />
             2-4. 画面の「次の頭文字」に、現在のターンでつなぐべき文字が表示されます。
           </p>
@@ -825,7 +825,7 @@ export default function RoomFlow() {
             4. 敗北条件
           </p>
           <p style={{ fontSize: "12px", margin: 0 }}>
-            4-1. 韓国人が出した単語の「日本語訳」が「ん」で終わる場合、
+            4-1. 韓国人が出した単語의「日本語訳」が「ん」で終わる場合、
             そのラウンドは韓国人の負けになります。
             <br />
             4-2. 自分の残り時間が0秒になった場合、負けになります。
@@ -1085,17 +1085,31 @@ export default function RoomFlow() {
               {T.btnChangeNation}
             </button>
           </div>
-          <button onClick={handleToggleCreateRoom} style={primaryButtonStyle}>
+          <button
+            onClick={handleToggleCreateRoom}
+            style={primaryButtonStyle}
+          >
             {T.createRoomBtn}
           </button>
         </div>
 
         {/* 방 만들기 (방 목록 위로 이동) */}
         {isCreating && (
-          <div style={{ ...cardStyle, marginBottom: "12px", position: "relative" }}>
+          <div
+            style={{
+              ...cardStyle,
+              marginBottom: "12px",
+              position: "relative",
+            }}
+          >
             <button
               onClick={() => setIsCreating(false)}
-              style={{ ...closeIconStyle, position: "absolute", top: 8, right: 8 }}
+              style={{
+                ...closeIconStyle,
+                position: "absolute",
+                top: 8,
+                right: 8,
+              }}
               aria-label="방 만들기 닫기"
             >
               ✕
@@ -1109,7 +1123,9 @@ export default function RoomFlow() {
               style={inputStyle}
             />
             {titleError && (
-              <p style={{ color: "#b91c1c", fontSize: "12px" }}>{titleError}</p>
+              <p style={{ color: "#b91c1c", fontSize: "12px" }}>
+                {titleError}
+              </p>
             )}
 
             <input
@@ -1127,7 +1143,11 @@ export default function RoomFlow() {
 
             <button
               onClick={handleCreateRoom}
-              style={{ ...primaryButtonStyle, width: "100%", marginTop: "4px" }}
+              style={{
+                ...primaryButtonStyle,
+                width: "100%",
+                marginTop: "4px",
+              }}
             >
               {T.createRoomBtn}
             </button>
@@ -1157,7 +1177,13 @@ export default function RoomFlow() {
           {rooms.length === 0 ? (
             <p>{T.noRooms}</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "6px",
+              }}
+            >
               {rooms.map((room) => (
                 <div key={room.roomId}>
                   {/* 방 항목 */}
@@ -1171,13 +1197,18 @@ export default function RoomFlow() {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      backgroundColor: selectedRoom?.roomId === room.roomId ? "#f0f9ff" : "transparent",
+                      backgroundColor:
+                        selectedRoom?.roomId === room.roomId
+                          ? "#f0f9ff"
+                          : "transparent",
                       userSelect: "none",
                     }}
                   >
                     <div>
                       <strong>{room.roomName}</strong>{" "}
-                      <span style={{ fontSize: "12px", color: "#6b7280" }}>
+                      <span
+                        style={{ fontSize: "12px", color: "#6b7280" }}
+                      >
                         ({getPlayerTypeLabel(room.creatorType)})
                       </span>
                       {room.hasPassword && (
@@ -1199,27 +1230,48 @@ export default function RoomFlow() {
 
                   {/* 방 입장 (클릭한 방 바로 아래) */}
                   {selectedRoom?.roomId === room.roomId && (
-                    <div style={{ 
-                      marginTop: "6px",
-                      padding: "12px",
-                      borderRadius: "8px",
-                      border: "1px solid #d1d5db",
-                      backgroundColor: "#ffffff",
-                      boxShadow: "0 2px 4px rgba(15, 23, 42, 0.06)",
-                      position: "relative"
-                    }}>
+                    <div
+                      style={{
+                        marginTop: "6px",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        border: "1px solid #d1d5db",
+                        backgroundColor: "#ffffff",
+                        boxShadow:
+                          "0 2px 4px rgba(15, 23, 42, 0.06)",
+                        position: "relative",
+                      }}
+                    >
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedRoom(null);
                         }}
-                        style={{ ...closeIconStyle, position: "absolute", top: 8, right: 8 }}
+                        style={{
+                          ...closeIconStyle,
+                          position: "absolute",
+                          top: 8,
+                          right: 8,
+                        }}
                         aria-label="방 입장 닫기"
                       >
                         ✕
                       </button>
-                      <h4 style={{ marginTop: 0, marginBottom: "8px" }}>{T.enterRoomTitle}</h4>
-                      <p style={{ fontSize: "12px", color: "#6b7280", marginBottom: "8px" }}>
+                      <h4
+                        style={{
+                          marginTop: 0,
+                          marginBottom: "8px",
+                        }}
+                      >
+                        {T.enterRoomTitle}
+                      </h4>
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "#6b7280",
+                          marginBottom: "8px",
+                        }}
+                      >
                         {T.thisIsOppNationRoom}
                       </p>
 
@@ -1229,24 +1281,39 @@ export default function RoomFlow() {
                             type="password"
                             placeholder={T.inputPasswordPlaceholder}
                             value={joinPasswordInput}
-                            onChange={(e) => setJoinPasswordInput(e.target.value)}
+                            onChange={(e) =>
+                              setJoinPasswordInput(e.target.value)
+                            }
                             style={inputStyle}
                           />
                           <button
                             onClick={handleJoinRoom}
-                            style={{ ...primaryButtonStyle, width: "100%", marginTop: "6px" }}
+                            style={{
+                              ...primaryButtonStyle,
+                              width: "100%",
+                              marginTop: "6px",
+                            }}
                           >
                             {T.btnEnter}
                           </button>
                         </>
                       ) : (
                         <>
-                          <p style={{ fontSize: "12px", color: "#6b7280", marginBottom: "8px" }}>
+                          <p
+                            style={{
+                              fontSize: "12px",
+                              color: "#6b7280",
+                              marginBottom: "8px",
+                            }}
+                          >
                             {T.noPasswordRoom}
                           </p>
                           <button
                             onClick={handleJoinRoom}
-                            style={{ ...primaryButtonStyle, width: "100%" }}
+                            style={{
+                              ...primaryButtonStyle,
+                              width: "100%",
+                            }}
                           >
                             {T.btnEnterDirect}
                           </button>
@@ -1363,13 +1430,18 @@ export default function RoomFlow() {
           {/* 게임 중 */}
           {roomStage === "playing" && gameState && (
             <div
-              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: "12px",
+              }}
             >
               {/* 상단 정보 4개 */}
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                  gridTemplateColumns:
+                    "repeat(4, minmax(0, 1fr))",
                   gap: "8px",
                 }}
               >
@@ -1382,10 +1454,17 @@ export default function RoomFlow() {
                     border: "1px solid #e5e7eb",
                   }}
                 >
-                  <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#6b7280",
+                    }}
+                  >
                     {T.currentWord}
                   </div>
-                  <div style={{ marginTop: "4px", fontSize: "13px" }}>
+                  <div
+                    style={{ marginTop: "4px", fontSize: "13px" }}
+                  >
                     <div>
                       <strong>KO:</strong>{" "}
                       {gameState?.currentWord?.ko || "-"}
@@ -1406,7 +1485,12 @@ export default function RoomFlow() {
                     border: "1px solid #e5e7eb",
                   }}
                 >
-                  <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#6b7280",
+                    }}
+                  >
                     {T.myTime}
                   </div>
                   <div
@@ -1430,7 +1514,12 @@ export default function RoomFlow() {
                     border: "1px solid #e5e7eb",
                   }}
                 >
-                  <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#6b7280",
+                    }}
+                  >
                     {T.oppTime}
                   </div>
                   <div
@@ -1454,10 +1543,20 @@ export default function RoomFlow() {
                     border: "1px solid #e5e7eb",
                   }}
                 >
-                  <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#6b7280",
+                    }}
+                  >
                     {T.turn}
                   </div>
-                  <div style={{ fontWeight: 600, marginTop: "4px" }}>
+                  <div
+                    style={{
+                      fontWeight: 600,
+                      marginTop: "4px",
+                    }}
+                  >
                     {isMyTurn ? T.myTurn : T.oppTurn}
                   </div>
                 </div>
@@ -1482,7 +1581,10 @@ export default function RoomFlow() {
                       }}
                     >
                       <div
-                        style={{ fontSize: "12px", color: "#6b7280" }}
+                        style={{
+                          fontSize: "12px",
+                          color: "#6b7280",
+                        }}
                       >
                         {T.nextCharKo}
                       </div>
@@ -1507,7 +1609,10 @@ export default function RoomFlow() {
                       }}
                     >
                       <div
-                        style={{ fontSize: "12px", color: "#6b7280" }}
+                        style={{
+                          fontSize: "12px",
+                          color: "#6b7280",
+                        }}
                       >
                         {T.nextCharJa}
                       </div>
@@ -1519,7 +1624,9 @@ export default function RoomFlow() {
                       >
                         {nextJaFirst || nextJaSecond
                           ? `${nextJaFirst || ""}${
-                              nextJaFirst && nextJaSecond ? " / " : ""
+                              nextJaFirst && nextJaSecond
+                                ? " / "
+                                : ""
                             }${nextJaSecond || ""}`
                           : "-"}
                       </div>
@@ -1531,12 +1638,17 @@ export default function RoomFlow() {
               {/* 입력 폼 */}
               <form
                 onSubmit={handleSubmitWord}
-                style={{ display: "flex", gap: "8px" }}
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                }}
               >
                 <input
                   type="text"
                   value={inputWord}
-                  onChange={(e) => setInputWord(e.target.value)}
+                  onChange={(e) =>
+                    setInputWord(e.target.value)
+                  }
                   placeholder="단어를 입력하세요"
                   disabled={!isMyTurn}
                   style={inputStyle}
@@ -1575,8 +1687,14 @@ export default function RoomFlow() {
                 >
                   {T.history}
                 </div>
-                {!gameState.history || gameState.history.length === 0 ? (
-                  <p style={{ fontSize: "13px", marginTop: "4px" }}>
+                {!gameState.history ||
+                gameState.history.length === 0 ? (
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      marginTop: "4px",
+                    }}
+                  >
                     {T.noHistory}
                   </p>
                 ) : (
@@ -1588,8 +1706,10 @@ export default function RoomFlow() {
                     }}
                   >
                     {gameState.history.map((h, idx) => {
-                      const isMine = h.player === playerType;
-                      const playerLabel = getPlayerTypeLabel(h.player);
+                      const isMine =
+                        h.player === playerType;
+                      const playerLabel =
+                        getPlayerTypeLabel(h.player);
 
                       const wordLang =
                         h.player === "korean"
@@ -1624,7 +1744,8 @@ export default function RoomFlow() {
                           <div
                             style={{
                               display: "flex",
-                              justifyContent: "space-between",
+                              justifyContent:
+                                "space-between",
                               fontSize: "12px",
                               marginBottom: "2px",
                             }}
@@ -1635,13 +1756,16 @@ export default function RoomFlow() {
                                 color: "#4b5563",
                               }}
                             >
-                              #{idx + 1} · {playerLabel}
+                              #{idx + 1} ·{" "}
+                              {playerLabel}
                             </span>
                             <span
                               style={{
                                 padding: "0 6px",
-                                borderRadius: "999px",
-                                border: "1px solid #d1d5db",
+                                borderRadius:
+                                  "999px",
+                                border:
+                                  "1px solid #d1d5db",
                                 fontSize: "11px",
                                 backgroundColor: isMine
                                   ? "#dbeafe"
@@ -1665,10 +1789,15 @@ export default function RoomFlow() {
                             }}
                           >
                             <div>
-                              <strong>{wordLang}:</strong> {h.word}
+                              <strong>
+                                {wordLang}:
+                              </strong>{" "}
+                              {h.word}
                             </div>
                             <div>
-                              <strong>{translatedLang}:</strong>{" "}
+                              <strong>
+                                {translatedLang}:
+                              </strong>{" "}
                               {h.translated}
                             </div>
                           </div>
@@ -1687,17 +1816,34 @@ export default function RoomFlow() {
               <h3>{T.gameOver}</h3>
               <p>
                 {T.winner}:{" "}
-                <strong>{winnerLabel || "결과를 불러오지 못했습니다."}</strong>
+                <strong>
+                  {winnerLabel ||
+                    "결과를 불러오지 못했습니다."}
+                </strong>
               </p>
-              <p style={{ fontSize: "13px", color: "#6b7280" }}>
-                (다시 하려면 방을 나갔다가 새 방을 만들거나 입장해주세요.)
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "#6b7280",
+                }}
+              >
+                (다시 하려면 방을 나갔다가 새 방을 만들거나
+                입장해주세요.)
               </p>
             </div>
           )}
 
           {/* 방 나가기 */}
-          <div style={{ marginTop: "16px", textAlign: "right" }}>
-            <button onClick={handleLeaveRoom} style={buttonStyle}>
+          <div
+            style={{
+              marginTop: "16px",
+              textAlign: "right",
+            }}
+          >
+            <button
+              onClick={handleLeaveRoom}
+              style={buttonStyle}
+            >
               {T.leaveRoom}
             </button>
           </div>
@@ -1708,10 +1854,25 @@ export default function RoomFlow() {
 
   // 안전망
   return (
-    <div style={{ ...pageStyle, textAlign: "center", marginTop: "80px" }}>
-      <div style={{ ...cardStyle, maxWidth: "400px", margin: "0 auto" }}>
+    <div
+      style={{
+        ...pageStyle,
+        textAlign: "center",
+        marginTop: "80px",
+      }}
+    >
+      <div
+        style={{
+          ...cardStyle,
+          maxWidth: "400px",
+          margin: "0 auto",
+        }}
+      >
         <p>오류가 발생했습니다. 처음으로 돌아갑니다.</p>
-        <button onClick={() => setStep(1)} style={primaryButtonStyle}>
+        <button
+          onClick={() => setStep(1)}
+          style={primaryButtonStyle}
+        >
           처음으로
         </button>
       </div>
